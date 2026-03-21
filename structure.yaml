@@ -1,0 +1,395 @@
+# structure.yaml
+# NSL-RAG Project Scaffold Configuration
+# This file is the single source of truth for project structure.
+# Run setup.py to generate everything from this config.
+
+project:
+  name: nsl-rag
+  package_name: nsl_rag
+  version: 0.1.0
+  python_requires: ">=3.11"
+  description: >
+    Neuro-Symbolic Lattice RAG — formally bounded, causally traced
+    retrieval-augmented generation for DevOps dependency reasoning.
+  author: ""
+  license: MIT
+  repository: ""
+
+structure:
+
+  directories:
+
+    # ── Core Package ─────────────────────────────────────────────────
+    - path: nsl_rag
+      description: >
+        Root package. Contains all source code.
+        Importable as: from nsl_rag import ...
+
+    - path: nsl_rag/lattice
+      description: >
+        Lattice construction, storage, and traversal.
+        The symbolic backbone of NSL-RAG.
+        Responsible for: node definitions, index management,
+        lattice building from raw data, and formal traversal
+        operations (join, meet, bounded retrieval).
+
+    - path: nsl_rag/retrieval
+      description: >
+        Query understanding and lattice-guided retrieval.
+        Neural layer: maps natural language to symbolic tags.
+        Retrieval layer: navigates lattice using extracted intent.
+
+    - path: nsl_rag/reasoning
+      description: >
+        Prosecutor / Judge / Auditor validation pipeline.
+        Prosecutor proposes candidate facts from retrieved nodes.
+        Judge validates facts against lattice constraints.
+        Auditor detects contradictions and flags uncertainty.
+
+    - path: nsl_rag/generation
+      description: >
+        LLM integration and structured output formatting.
+        Sends only validated context to Gemini.
+        Formats final output as {answer, trace, confidence, flags}.
+
+    - path: nsl_rag/evaluation
+      description: >
+        Benchmarking and comparison framework.
+        Implements naive RAG baseline for comparison.
+        Measures accuracy, token usage, latency, and trace quality.
+
+    - path: nsl_rag/data
+      description: >
+        Synthetic dataset definitions.
+        E-commerce microservices system with intentional
+        failure scenarios designed for multi-hop reasoning demos.
+
+    - path: nsl_rag/config
+      description: >
+        Configuration management.
+        settings.yaml holds all tunable parameters.
+        config_loader.py validates and exposes config to all modules.
+        .env holds secrets — never committed to git.
+
+    - path: nsl_rag/core
+      description: >
+        Shared infrastructure used across all modules.
+        Logger: structured logging setup.
+        Exceptions: custom exception hierarchy.
+        Types: shared type definitions and constants.
+
+    # ── Tests ────────────────────────────────────────────────────────
+    - path: tests
+      description: >
+        All tests. Mirrors nsl_rag/ package structure.
+        Unit tests per module. Integration tests for full pipeline.
+        Run with: pytest tests/
+
+    - path: tests/unit
+      description: >
+        Unit tests — one file per module.
+        Tests each component in isolation with mocked dependencies.
+
+    - path: tests/integration
+      description: >
+        Integration tests — full pipeline end to end.
+        Tests complete query → answer flow.
+        Tests benchmark comparison pipeline.
+
+    - path: tests/fixtures
+      description: >
+        Shared test data and fixtures.
+        Sample lattice structures, mock queries, expected outputs.
+
+    # ── Notebooks ────────────────────────────────────────────────────
+    - path: notebooks
+      description: >
+        Jupyter / Colab notebooks for exploration and demo.
+        NOT production code. Used for:
+        - Interactive demos for paper and blog
+        - Exploratory analysis during development
+        - Shareable demo link for presentations
+
+    # ── Paper ────────────────────────────────────────────────────────
+    - path: paper
+      description: >
+        Research paper assets.
+        Living paper outline document.
+        Figures, diagrams, and benchmark result tables.
+        Final submission files.
+
+    # ── Docs ─────────────────────────────────────────────────────────
+    - path: docs
+      description: >
+        Project documentation.
+        Architecture decisions and design rationale.
+        API reference (auto-generated later).
+        Setup and contribution guides.
+
+    # ── Scripts ──────────────────────────────────────────────────────
+    - path: scripts
+      description: >
+        Standalone utility scripts.
+        Not part of the importable package.
+        Includes: setup.py scaffold generator,
+        benchmark runners, data generators.
+
+    # ── Assets ───────────────────────────────────────────────────────
+    - path: assets
+      description: >
+        Static assets for documentation and paper.
+        Architecture diagrams, benchmark charts,
+        demo screenshots.
+
+  files:
+
+    # ── Package Init Files ───────────────────────────────────────────
+    - path: nsl_rag/__init__.py
+      description: >
+        Package entry point.
+        Exposes public API of nsl_rag package.
+        Sets package version.
+
+    - path: nsl_rag/lattice/__init__.py
+      description: Exposes LatticeNode, LatticeIndex, LatticeBuilder, LatticeTraversal.
+
+    - path: nsl_rag/retrieval/__init__.py
+      description: Exposes IntentExtractor, LatticeNavigator.
+
+    - path: nsl_rag/reasoning/__init__.py
+      description: Exposes Prosecutor, Judge, Auditor.
+
+    - path: nsl_rag/generation/__init__.py
+      description: Exposes Generator, OutputFormatter.
+
+    - path: nsl_rag/evaluation/__init__.py
+      description: Exposes NaiveRAG, BenchmarkRunner, Metrics.
+
+    - path: nsl_rag/data/__init__.py
+      description: Exposes EcommerceSystem dataset builder.
+
+    - path: nsl_rag/core/__init__.py
+      description: Exposes logger, exceptions, shared types.
+
+    - path: tests/__init__.py
+      description: Test package root.
+
+    - path: tests/unit/__init__.py
+      description: Unit test package.
+
+    - path: tests/integration/__init__.py
+      description: Integration test package.
+
+    - path: tests/fixtures/__init__.py
+      description: Fixtures package.
+
+    # ── Lattice Module Files ─────────────────────────────────────────
+    - path: nsl_rag/lattice/node.py
+      description: >
+        LatticeNode dataclass.
+        Defines the structure of a single concept node:
+        id, title, content, tags, children, metadata, confidence.
+
+    - path: nsl_rag/lattice/index.py
+      description: >
+        LatticeIndex class.
+        In-memory store for all nodes.
+        Add, retrieve, validate node operations.
+
+    - path: nsl_rag/lattice/builder.py
+      description: >
+        LatticeBuilder class.
+        Constructs a LatticeIndex from raw domain data.
+        Entry point for dataset → lattice transformation.
+
+    - path: nsl_rag/lattice/traversal.py
+      description: >
+        LatticeTraversal class.
+        Core NSL-RAG innovation.
+        Implements: join navigation, downward traversal,
+        bounded retrieval, dependency chain following.
+
+    # ── Retrieval Module Files ───────────────────────────────────────
+    - path: nsl_rag/retrieval/intent.py
+      description: >
+        IntentExtractor class.
+        Neural layer — uses Gemini to decompose natural language
+        query into structured symbolic tags and constraints.
+
+    - path: nsl_rag/retrieval/navigator.py
+      description: >
+        LatticeNavigator class.
+        Orchestrates intent extraction + lattice traversal.
+        Returns candidate nodes for reasoning pipeline.
+
+    # ── Reasoning Module Files ───────────────────────────────────────
+    - path: nsl_rag/reasoning/prosecutor.py
+      description: >
+        Prosecutor class.
+        Proposes candidate facts from retrieved lattice nodes.
+        Extracts factual claims with source attribution.
+
+    - path: nsl_rag/reasoning/judge.py
+      description: >
+        Judge class.
+        Validates proposed facts against lattice constraints.
+        Classifies each fact as: confident / uncertain / invalid.
+
+    - path: nsl_rag/reasoning/auditor.py
+      description: >
+        Auditor class.
+        Cross-validates all facts for contradictions.
+        Flags inconsistencies before LLM generation.
+
+    # ── Generation Module Files ──────────────────────────────────────
+    - path: nsl_rag/generation/generator.py
+      description: >
+        Generator class.
+        Manages Gemini API interaction.
+        Sends only judge-validated context to LLM.
+        Handles rate limiting and retries.
+
+    - path: nsl_rag/generation/formatter.py
+      description: >
+        OutputFormatter class.
+        Structures LLM response into standard output format:
+        {answer, trace, confidence, flags, metadata}.
+
+    # ── Evaluation Module Files ──────────────────────────────────────
+    - path: nsl_rag/evaluation/naive_rag.py
+      description: >
+        NaiveRAG class.
+        Baseline implementation using chunking +
+        cosine similarity retrieval. No reasoning layer.
+        Used as comparison baseline in benchmarks.
+
+    - path: nsl_rag/evaluation/metrics.py
+      description: >
+        Metrics and BenchmarkRunner classes.
+        Measures: answer accuracy, token usage,
+        latency, retrieval precision, trace quality.
+        Produces comparison tables across all RAG approaches.
+
+    # ── Data Module Files ────────────────────────────────────────────
+    - path: nsl_rag/data/ecommerce.py
+      description: >
+        EcommerceSystem class.
+        Defines synthetic e-commerce microservices dataset.
+        9 services, 3 databases, 3 deployments, 3 failure scenarios.
+        Designed for multi-hop causal reasoning demonstration.
+
+    # ── Config Files ─────────────────────────────────────────────────
+    - path: nsl_rag/config/settings.yaml
+      description: >
+        All tunable configuration parameters.
+        LLM settings, retrieval parameters, evaluation config.
+        No secrets — those live in .env only.
+
+    - path: nsl_rag/config/config_loader.py
+      description: >
+        ConfigLoader class.
+        Loads, validates, and exposes settings.yaml + .env.
+        Single access point for all config across the system.
+        Fails fast on missing required config.
+
+    # ── Core Files ───────────────────────────────────────────────────
+    - path: nsl_rag/core/logger.py
+      description: >
+        Centralised logging setup.
+        Structured JSON logging for production.
+        Human-readable format for development.
+        Imported by every module.
+
+    - path: nsl_rag/core/exceptions.py
+      description: >
+        Custom exception hierarchy.
+        LatticeError, RetrievalError, ReasoningError,
+        GenerationError, ConfigError.
+        Never raise generic exceptions in this codebase.
+
+    - path: nsl_rag/core/types.py
+      description: >
+        Shared type definitions, enums, and constants.
+        QueryType, FactStatus, OutputFormat type definitions.
+        Used across all modules for type safety.
+
+    # ── Test Files ───────────────────────────────────────────────────
+    - path: tests/unit/test_lattice.py
+      description: Tests for LatticeNode, LatticeIndex, LatticeBuilder, LatticeTraversal.
+
+    - path: tests/unit/test_retrieval.py
+      description: Tests for IntentExtractor and LatticeNavigator.
+
+    - path: tests/unit/test_reasoning.py
+      description: Tests for Prosecutor, Judge, and Auditor.
+
+    - path: tests/unit/test_generation.py
+      description: Tests for Generator and OutputFormatter.
+
+    - path: tests/unit/test_evaluation.py
+      description: Tests for NaiveRAG, Metrics, and BenchmarkRunner.
+
+    - path: tests/integration/test_pipeline.py
+      description: >
+        End-to-end pipeline test.
+        Runs complete query through all layers.
+        Validates output structure and content.
+
+    - path: tests/fixtures/sample_lattice.py
+      description: Shared lattice fixture used across unit tests.
+
+    - path: tests/fixtures/sample_queries.py
+      description: Sample queries and expected outputs for testing.
+
+    # ── Root Files ───────────────────────────────────────────────────
+    - path: .env.example
+      description: >
+        Template for .env file.
+        Lists all required environment variables with descriptions.
+        Safe to commit — contains no real secrets.
+
+    - path: .gitignore
+      description: >
+        Git ignore rules.
+        Ignores: .env, venv, __pycache__, .pytest_cache,
+        *.pyc, .DS_Store, dist/, build/, *.egg-info.
+
+    - path: pyproject.toml
+      description: >
+        Modern Python project configuration.
+        Replaces setup.py + requirements.txt.
+        Defines dependencies, dev dependencies,
+        tool config for pytest, ruff, mypy.
+
+    - path: README.md
+      description: >
+        Project homepage.
+        What NSL-RAG is, why it exists, how to run it.
+        Architecture diagram, quick start, project status.
+        First thing anyone sees on GitHub.
+
+    - path: NOTES.md
+      description: >
+        Living research and build log.
+        Updated after every significant change.
+        Records decisions, findings, and open questions.
+        Becomes the foundation of the paper's methodology section.
+
+    - path: CHANGELOG.md
+      description: >
+        Version history and change log.
+        Updated with every meaningful commit.
+        Format: Keep a Changelog standard.
+
+    - path: scripts/setup.py
+      description: >
+        Project scaffold generator.
+        Reads structure.yaml and creates all
+        directories and files automatically.
+        Idempotent — safe to run multiple times.
+
+    - path: scripts/generate_notes.py
+      description: >
+        NOTES.md auto-updater.
+        Appends timestamped entries to NOTES.md
+        after significant build events.

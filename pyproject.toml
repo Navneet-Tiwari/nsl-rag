@@ -1,0 +1,2 @@
+# pyproject.toml
+# Modern Python project configuration. Replaces setup.py + requirements.txt. Defines dependencies, dev dependencies, tool config for pytest, ruff, mypy.

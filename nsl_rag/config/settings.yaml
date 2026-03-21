@@ -1,0 +1,2 @@
+# settings.yaml
+# All tunable configuration parameters. LLM settings, retrieval parameters, evaluation config. No secrets — those live in .env only.
