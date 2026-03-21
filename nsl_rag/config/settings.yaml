@@ -1,2 +1,63 @@
 # settings.yaml
-# All tunable configuration parameters. LLM settings, retrieval parameters, evaluation config. No secrets — those live in .env only.
+# All tunable configuration for NSL-RAG.
+# No secrets here — those live in .env only.
+# Access via: from nsl_rag.config.config_loader import config
+
+# ── Project ───────────────────────────────────────────────────────────────────
+project:
+  name: nsl-rag
+  version: 0.1.0
+  environment: development        # development | production
+
+# ── LLM ──────────────────────────────────────────────────────────────────────
+llm:
+  provider: gemini
+  model: gemini-1.5-flash         # fast, free tier sufficient
+  temperature: 0.1                # low = more deterministic, better for reasoning
+  max_tokens: 1000
+  max_retries: 3
+  retry_delay_seconds: 5          # wait between retries on rate limit
+
+# ── Lattice ───────────────────────────────────────────────────────────────────
+lattice:
+  max_depth: 10                   # maximum traversal depth
+  max_nodes_per_query: 5          # cap on nodes returned per retrieval
+  confidence_threshold: 0.7       # minimum confidence to include a node
+
+# ── Retrieval ─────────────────────────────────────────────────────────────────
+retrieval:
+  max_tags_per_query: 5           # maximum tags extracted from one query
+  min_tag_match: 1                # minimum tags that must match for retrieval
+
+# ── Reasoning ─────────────────────────────────────────────────────────────────
+reasoning:
+  prosecutor:
+    max_facts_per_node: 5         # maximum facts proposed per node
+  judge:
+    strict_mode: true             # true = reject invalid, false = mark uncertain
+  auditor:
+    contradiction_threshold: 0.8  # confidence above which contradictions are flagged
+
+# ── Generation ────────────────────────────────────────────────────────────────
+generation:
+  max_context_nodes: 5            # maximum validated nodes sent to LLM
+  include_trace: true             # always include reasoning trace in output
+  include_confidence: true        # always include confidence score in output
+
+# ── Evaluation ────────────────────────────────────────────────────────────────
+evaluation:
+  naive_rag:
+    top_k: 5                      # number of chunks retrieved by naive RAG
+    chunk_size: 512               # characters per chunk
+    chunk_overlap: 50             # overlap between chunks
+  benchmark:
+    test_queries_path: tests/fixtures/sample_queries.py
+    output_path: assets/benchmark_results.json
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+logging:
+  level: DEBUG                    # DEBUG | INFO | WARNING | ERROR
+  format: console                 # console (human readable) | json (production)
+  file:
+    enabled: false                # set true in production
+    path: logs/nsl_rag.log

@@ -1,2 +1,59 @@
-# pyproject.toml
-# Modern Python project configuration. Replaces setup.py + requirements.txt. Defines dependencies, dev dependencies, tool config for pytest, ruff, mypy.
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[project]
+name = "nsl-rag"
+version = "0.1.0"
+description = "Neuro-Symbolic Lattice RAG — formally bounded, causally traced retrieval for DevOps reasoning"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+
+dependencies = [
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "google-generativeai>=0.5",
+    "sentence-transformers>=3.0",
+    "numpy>=1.26",
+    "structlog>=24.0",
+]
+
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts   = "-v --tb=short"
+
+
+[tool.ruff]
+line-length    = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+
+[tool.ruff.format]
+quote-style  = "double"
+indent-style = "space"
+line-ending  = "auto"
+
+
+[tool.mypy]
+python_version         = "3.11"
+strict                 = false
+ignore_missing_imports = true
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["nsl_rag"]
