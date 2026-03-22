@@ -46,6 +46,7 @@ class LatticeTraversal:
         self._max_depth = config.lattice.max_depth
         self._max_nodes = config.lattice.max_nodes_per_query
         self._threshold = config.lattice.confidence_threshold
+        self._min_match = config.retrieval.min_tag_match
         log.debug(
             "LatticeTraversal initialised — max_depth: %d, max_nodes: %d",
             self._max_depth,
@@ -176,35 +177,25 @@ class LatticeTraversal:
     def _find_entry_points(self, query_tags: list[str]) -> list[LatticeNode]:
         """
         Find the best entry points for traversal given query tags.
-
-        Strategy:
-        - First try to find nodes matching ALL tags
-        - If none found, start from root nodes
-        - Entry points are the most general nodes matching the tags
-          (i.e. nodes whose parents do NOT match the tags)
-
-        Args:
-            query_tags: Tags to match against.
-
-        Returns:
-            List of entry point nodes for downward traversal.
+        Uses min_match threshold from config for flexible matching.
         """
         if not query_tags:
             return self._index.root_nodes()
 
-        # Find all nodes matching the tags
-        matching = self._index.nodes_matching_tags(query_tags)
+        matching = self._index.nodes_matching_tags(
+            query_tags, min_match=self._min_match
+        )
 
         if not matching:
             log.debug("No tag matches found — falling back to root nodes")
             return self._index.root_nodes()
 
-        # Filter to only the most general matching nodes
-        # A node is an entry point if none of its parents also match
         entry_points = []
         for node in matching:
             parents = self._index.get_parents(node.node_id)
-            parent_matches = any(p.matches_tags(query_tags) for p in parents)
+            parent_matches = any(
+                p.matches_tags(query_tags, min_match=self._min_match) for p in parents
+            )
             if not parent_matches:
                 entry_points.append(node)
                 log.debug("Entry point identified: %s", node.node_id)
@@ -246,7 +237,7 @@ class LatticeTraversal:
         visited.add(node.node_id)
 
         # Collect this node if it matches
-        if node.matches_tags(query_tags):
+        if node.matches_tags(query_tags, min_match=self._min_match):
             results.append(node)
             log.debug(
                 "  depth=%d | collected: %s | tags: %s", depth, node.node_id, node.tags

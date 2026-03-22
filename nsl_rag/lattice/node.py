@@ -118,24 +118,38 @@ class LatticeNode(BaseModel):
 
     # ── Methods ───────────────────────────────────────────────────────────────
 
-    def matches_tags(self, query_tags: list[str]) -> bool:
+    def matches_tags(
+        self,
+        query_tags: list[str],
+        min_match: int = 1,
+    ) -> bool:
         """
-        Returns True if ALL query tags are present in this node's tags.
-        This is the symbolic AND filter — the core of lattice retrieval.
-        A node must satisfy every tag constraint to be retrieved.
+        Returns True if at least min_match query tags are present
+        in this node's tags.
+
+        Default min_match=1 preserves backward compatibility.
+        Navigator passes config.retrieval.min_tag_match for
+        production retrieval.
 
         Args:
             query_tags: Tags extracted from the user query.
+            min_match:  Minimum number of tags that must match.
+                        1 = any tag matches (OR logic)
+                        len(query_tags) = all tags must match (AND logic)
 
         Example:
             node.tags = ["payment", "service", "critical"]
-            query_tags = ["payment", "service"]
-            → True  (all query tags present)
+            query_tags = ["payment", "service", "gateway"]
+            min_match = 2
+            → 2 tags match ("payment", "service") → True
 
-            query_tags = ["payment", "database"]
-            → False (database tag not in node)
+            min_match = 3
+            → only 2 match → False
         """
-        return all(tag in self.tags for tag in query_tags)
+        if not query_tags:
+            return True
+        matches = sum(1 for tag in query_tags if tag in self.tags)
+        return matches >= min_match
 
     def to_context_string(self) -> str:
         """

@@ -99,25 +99,31 @@ class LatticeIndex:
         """Return all nodes of a specific type."""
         return [n for n in self._nodes.values() if n.node_type == node_type]
 
-    def nodes_matching_tags(self, tags: list[str]) -> list[LatticeNode]:
+    def nodes_matching_tags(
+        self,
+        tags: list[str],
+        min_match: int = 1,
+    ) -> list[LatticeNode]:
         """
-        Return all nodes that match ALL provided tags.
-        This is the symbolic AND filter applied across the full index.
-        Used by LatticeNavigator during retrieval.
+        Return all nodes that match at least min_match of the provided tags.
 
         Args:
-            tags: List of tags that must ALL be present in matching nodes.
+            tags:      List of tags to match against.
+            min_match: Minimum number of tags that must match.
 
         Returns:
-            List of nodes satisfying all tag constraints.
+            List of nodes satisfying the match threshold.
         """
         if not tags:
             return self.all_nodes()
 
-        matched = [n for n in self._nodes.values() if n.matches_tags(tags)]
+        matched = [
+            n for n in self._nodes.values() if n.matches_tags(tags, min_match=min_match)
+        ]
         log.debug(
-            "Tag query %s → %d nodes matched from %d total",
+            "Tag query %s (min_match=%d) → %d nodes matched from %d total",
             tags,
+            min_match,
             len(matched),
             len(self._nodes),
         )
