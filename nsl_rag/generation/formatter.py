@@ -228,7 +228,7 @@ class OutputFormatter:
         if match:
             return match.group(1).strip()
 
-        # Fallback — try simple line-by-line search
+        # Fallback — line by line search
         for line in text.split("\n"):
             if line.upper().startswith(f"{field_name}:"):
                 value = line[len(field_name) + 1 :].strip()
