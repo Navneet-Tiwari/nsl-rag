@@ -51,6 +51,9 @@ class LatticeConfig(BaseModel):
 class RetrievalConfig(BaseModel):
     max_tags_per_query: int = 5
     min_tag_match: int = 1
+    intent_cache_enabled: bool = True
+    intent_cache_max_size: int = 500
+    gemini_prompt_max_tokens: int = 150
 
 
 class ProsecutorConfig(BaseModel):

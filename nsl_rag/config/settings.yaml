@@ -12,7 +12,7 @@ project:
 # ── LLM ──────────────────────────────────────────────────────────────────────
 llm:
   provider: gemini
-  model: gemini-1.5-flash         # fast, free tier sufficient
+  model: gemini-2.5-flash         # fast, free tier sufficient
   temperature: 0.1                # low = more deterministic, better for reasoning
   max_tokens: 1000
   max_retries: 3
@@ -26,8 +26,11 @@ lattice:
 
 # ── Retrieval ─────────────────────────────────────────────────────────────────
 retrieval:
-  max_tags_per_query: 5           # maximum tags extracted from one query
-  min_tag_match: 1                # minimum tags that must match for retrieval
+  max_tags_per_query: 5
+  min_tag_match: 1
+  intent_cache_enabled: true     # toggle caching of intent extraction results
+  intent_cache_max_size: 500     # max cached queries
+  gemini_prompt_max_tokens: 150  # keep prompts tight
 
 # ── Reasoning ─────────────────────────────────────────────────────────────────
 reasoning:
