@@ -208,3 +208,103 @@ class TestOutputFormats:
     def test_to_trace_entry_contains_node_type(self, payment_node):
         trace = payment_node.to_trace_entry()
         assert "SERVICE" in trace
+
+
+# ── Integration Smoke Test ────────────────────────────────────────────────────
+
+
+class TestLatticeIntegration:
+    """
+    Full stack test — Node + Index + Builder + Traversal together.
+    These are not unit tests — they test the whole lattice pipeline.
+    """
+
+    @pytest.fixture
+    def raw_nodes(self) -> list[dict]:
+        return [
+            {
+                "node_id": "ecommerce_root",
+                "node_type": "root",
+                "title": "E-Commerce System",
+                "summary": "Root node",
+                "content": "Top level system",
+                "tags": ["root", "system"],
+                "children": ["payment_service"],
+                "parents": [],
+            },
+            {
+                "node_id": "payment_service",
+                "node_type": "service",
+                "title": "Payment Service",
+                "summary": "Handles payments",
+                "content": "Runs on port 8080",
+                "tags": ["payment", "service", "critical"],
+                "children": ["payment_db", "fraud_detection"],
+                "parents": ["ecommerce_root"],
+            },
+            {
+                "node_id": "fraud_detection",
+                "node_type": "service",
+                "title": "Fraud Detection",
+                "summary": "Validates payments",
+                "content": "ML fraud scoring",
+                "tags": ["payment", "service", "fraud", "critical"],
+                "children": [],
+                "parents": ["payment_service"],
+            },
+            {
+                "node_id": "payment_db",
+                "node_type": "database",
+                "title": "Payment Database",
+                "summary": "Stores transactions",
+                "content": "PostgreSQL port 5432",
+                "tags": ["payment", "database", "critical"],
+                "children": [],
+                "parents": ["payment_service"],
+            },
+        ]
+
+    @pytest.fixture
+    def built_index(self, raw_nodes):
+        from nsl_rag.lattice.builder import LatticeBuilder
+
+        builder = LatticeBuilder()
+        return builder.build(raw_nodes)
+
+    @pytest.fixture
+    def traversal(self, built_index):
+        from nsl_rag.lattice.traversal import LatticeTraversal
+        from nsl_rag.config.config_loader import config
+
+        config.load()
+        return LatticeTraversal(built_index)
+
+    def test_builder_creates_correct_node_count(self, built_index):
+        assert built_index.size == 4
+
+    def test_retrieval_payment_critical(self, traversal):
+        results = traversal.retrieve(["payment", "critical"])
+        ids = [n.node_id for n in results]
+        assert "payment_service" in ids
+        assert "payment_db" in ids
+        assert "fraud_detection" in ids
+
+    def test_retrieval_excludes_unrelated_nodes(self, traversal):
+        results = traversal.retrieve(["payment", "database"])
+        ids = [n.node_id for n in results]
+        assert "payment_db" in ids
+        assert "fraud_detection" not in ids
+        assert "ecommerce_root" not in ids
+
+    def test_dependency_chain_traverses_upward(self, traversal):
+        chain = traversal.retrieve_dependency_chain("payment_db")
+        ids = [n.node_id for n in chain]
+        assert "payment_db" in ids
+        assert "payment_service" in ids
+        assert "ecommerce_root" in ids
+
+    def test_explain_retrieval_returns_correct_structure(self, traversal):
+        explanation = traversal.explain_retrieval(["fraud", "critical"])
+        assert "query_tags" in explanation
+        assert "result_nodes" in explanation
+        assert "fraud_detection" in explanation["result_nodes"]
