@@ -92,6 +92,39 @@ Evaluated on 5 DevOps incident queries — retrieval layer only (no LLM calls):
 
 ---
 
+## Comparison With Graph-Based RAG Approaches
+
+| Property | Standard RAG | GraphRAG | HippoRAG | NSL-RAG |
+|---|---|---|---|---|
+| Retrieval structure | None | Knowledge Graph | Knowledge Graph | Concept Lattice |
+| Formal ordering | ❌ | ❌ | ❌ | ✅ |
+| Bounded retrieval proof | ❌ | ❌ | ❌ | ✅ |
+| Fact validation layer | ❌ | ❌ | ❌ | ✅ P/J/A |
+| Contradiction detection | ❌ | ❌ | ❌ | ✅ |
+| Causal chain traversal | ❌ | Partial | ❌ | ✅ |
+| Reasoning trace | ❌ | Partial | ❌ | ✅ 100% |
+
+### Why A Lattice Beats A Knowledge Graph For Reasoning
+
+A knowledge graph stores connections. A lattice stores **ordered** 
+connections — every concept has a provable position relative to 
+every other concept.
+
+This formal ordering enables **bounded retrieval** — the guarantee 
+that irrelevant nodes are mathematically excluded from results. 
+GraphRAG uses graph proximity heuristics. NSL-RAG uses formal 
+lattice constraints. The difference is the difference between 
+"probably relevant" and "provably relevant."
+
+### Roadmap
+
+- **v0.1.0** *(current)* — Proof of concept vs Standard RAG
+- **v0.2.0** *(planned)* — Formal benchmark vs GraphRAG, HippoRAG, RAPTOR
+- **v0.3.0** *(planned)* — Automatic lattice construction via FCA
+- **v1.0.0** *(planned)* — Production release + arXiv paper
+
+---
+
 ## Quick Start
 ```bash
 git clone https://github.com/YOUR_USERNAME/nsl-rag.git
