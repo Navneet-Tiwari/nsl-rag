@@ -1,146 +1,162 @@
+<div align="center">
+
 # NSL-RAG
 ### Neuro-Symbolic Lattice Retrieval-Augmented Generation
 
-> *Standard RAG retrieves. It does not reason. NSL-RAG does both.*
+*Standard RAG retrieves. It does not reason. NSL-RAG does both.*
 
-[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Status: Research Preview](https://img.shields.io/badge/status-research%20preview-orange.svg)]()
+[![Version](https://img.shields.io/badge/version-0.1.0-green.svg)]()
+[![Tests](https://img.shields.io/badge/tests-28%20passing-brightgreen.svg)]()
+
+[**Overview**](#what-is-nsl-rag) • [**Architecture**](#architecture) • [**Quick Start**](#quick-start) • [**Benchmark**](#benchmark-results) • [**Roadmap**](#roadmap) • [**Paper**](#research)
+
+</div>
 
 ---
 
 ## What Is NSL-RAG?
 
-NSL-RAG replaces vector similarity search in RAG systems with a **formally ordered knowledge lattice** and a **symbolic reasoning pipeline**.
+NSL-RAG replaces vector similarity search in RAG systems with a **formally ordered knowledge lattice** and a **Prosecutor / Judge / Auditor validation pipeline**.
 
-Instead of finding text that *looks similar* to a query, NSL-RAG navigates a concept lattice to find nodes that are *logically relevant* — then validates every retrieved fact through a Prosecutor / Judge / Auditor pipeline before generating an answer.
+Instead of finding text that *looks similar* to a query, NSL-RAG navigates a concept lattice to find nodes that are *logically relevant* — then validates every retrieved fact through symbolic reasoning before generating an answer.
 
-The result: causally traced, contradiction-checked, explainable answers with full reasoning audit trails.
+**The result:** causally traced, contradiction-checked, explainable answers with full reasoning audit trails.
 
 ---
 
-## The Problem With Standard RAG
+## The Problem
 ```
 User: "Why is the payment service failing?"
 
 Standard RAG:
-→ Finds chunks that mention "payment" and "failing"
-→ Returns top-5 similar chunks (may include unrelated content)
-→ LLM generates answer from noisy context
-→ No reasoning trace. No validation. No causal chain.
+  → Finds chunks mentioning "payment" and "failing"
+  → Returns top-5 similar chunks (may include unrelated content)
+  → LLM generates answer from noisy, unvalidated context
+  → No reasoning trace. No validation. No causal chain.
 
 NSL-RAG:
-→ Extracts intent: tags=[payment, critical], entity=payment_service
-→ Navigates lattice: payment_service → fraud_detection → payment_db
-→ Prosecutor extracts 21 structured facts
-→ Judge validates all 21 facts (confident/uncertain/invalid)
-→ Auditor checks for contradictions
-→ LLM generates answer from validated facts only
-→ Returns: {answer, root_cause, confidence, trace, flags}
+  → Extracts intent: tags=[payment, critical], entity=payment_service
+  → Navigates lattice: payment_service → fraud_detection → payment_db
+  → Prosecutor extracts 21 structured facts
+  → Judge validates all 21 facts (confident / uncertain / invalid)
+  → Auditor checks for contradictions across facts
+  → LLM generates from validated facts only
+  → Returns: {answer, root_cause, confidence, trace, flags}
 ```
 
 ---
 
 ## Architecture
 ```
-Natural Language Query
-        ↓
-[NEURAL] Intent Extractor (Gemini)
-        ↓ tags, query_type, target_entity
-[SYMBOLIC] Lattice Traversal
-        ↓ retrieved nodes
-[PROSECUTOR] Fact Extraction
-        ↓ proposed facts
-[JUDGE] Symbolic Validation
-        ↓ confident / uncertain / invalid
-[AUDITOR] Contradiction Detection
-        ↓ clean facts + flags
-[NEURAL] LLM Generation (Gemini)
-        ↓
-{answer, root_cause, confidence, trace, flags}
+┌─────────────────────────────────────────────────────────────┐
+│                      NSL-RAG PIPELINE                       │
+│                                                             │
+│  Natural Language Query                                     │
+│          │                                                  │
+│          ▼                                                  │
+│  ┌──────────────┐                                           │
+│  │    NEURAL    │  IntentExtractor (Gemini)                 │
+│  │    LAYER     │  Query → {tags, query_type, entity}       │
+│  └──────┬───────┘                                           │
+│         │                                                   │
+│         ▼                                                   │
+│  ┌──────────────┐                                           │
+│  │   LATTICE    │  Formally ordered concept hierarchy       │
+│  │  TRAVERSAL   │  Join navigation + bounded retrieval      │
+│  └──────┬───────┘                                           │
+│         │  Retrieved nodes                                  │
+│         ▼                                                   │
+│  ┌──────────────┐                                           │
+│  │  PROSECUTOR  │  Extracts structured facts from nodes     │
+│  └──────┬───────┘                                           │
+│         │  Proposed facts                                   │
+│         ▼                                                   │
+│  ┌──────────────┐                                           │
+│  │    JUDGE     │  Validates facts against lattice rules    │
+│  └──────┬───────┘                                           │
+│         │  Confident / Uncertain / Invalid                  │
+│         ▼                                                   │
+│  ┌──────────────┐                                           │
+│  │   AUDITOR    │  Detects contradictions across facts      │
+│  └──────┬───────┘                                           │
+│         │  Clean facts + contradiction flags                │
+│         ▼                                                   │
+│  ┌──────────────┐                                           │
+│  │    NEURAL    │  Generator (Gemini)                       │
+│  │    LAYER     │  Validated context → structured answer    │
+│  └──────┬───────┘                                           │
+│         │                                                   │
+│         ▼                                                   │
+│  {answer, root_cause, confidence, trace, flags}             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Key Properties
+## What Is Actually Implemented
 
-| Property | Standard RAG | NSL-RAG |
-|---|---|---|
-| Retrieval method | Vector similarity | Lattice traversal |
-| Multi-hop reasoning | ❌ | ✅ |
-| Reasoning trace | ❌ | ✅ 100% |
-| Contradiction detection | ❌ | ✅ |
-| Fact validation | ❌ | ✅ P/J/A pipeline |
-| Bounded retrieval | ❌ | ✅ Formally provable |
-| Explainability | Low | High |
+This is not a design document. Every layer is fully implemented and tested:
 
----
-
-## Benchmark Results
-
-Evaluated on 5 DevOps incident queries — retrieval layer only (no LLM calls):
-
-| Metric | NSL-RAG | Naive RAG |
-|---|---|---|
-| Reasoning trace | **100%** | 0% |
-| Avg latency (retrieval) | 18.9ms | 0.8ms |
-| Fact validation | **Yes** | No |
-| Contradiction detection | **Yes** | No |
-| Bounded retrieval proof | **Yes** | No |
-
-*Full benchmark with LLM generation metrics coming in v0.2.0*
+| Layer | Module | Description | Status |
+|---|---|---|---|
+| Knowledge Lattice | `nsl_rag/lattice/` | Node, Index, Builder, Traversal | ✅ Complete |
+| Intent Extraction | `nsl_rag/retrieval/intent.py` | Gemini + cache + fallback | ✅ Complete |
+| Lattice Navigation | `nsl_rag/retrieval/navigator.py` | Full retrieval pipeline | ✅ Complete |
+| Prosecutor | `nsl_rag/reasoning/prosecutor.py` | Fact extraction from nodes | ✅ Complete |
+| Judge | `nsl_rag/reasoning/judge.py` | Symbolic fact validation | ✅ Complete |
+| Auditor | `nsl_rag/reasoning/auditor.py` | Contradiction detection | ✅ Complete |
+| LLM Generation | `nsl_rag/generation/generator.py` | Gemini with retry logic | ✅ Complete |
+| Structured Output | `nsl_rag/generation/formatter.py` | NSLRAGResponse formatter | ✅ Complete |
+| NaiveRAG Baseline | `nsl_rag/evaluation/naive_rag.py` | TF-IDF cosine baseline | ✅ Complete |
+| Benchmark Runner | `nsl_rag/evaluation/metrics.py` | Side-by-side comparison | ✅ Complete |
+| Pipeline Entry | `nsl_rag/pipeline.py` | Single interface | ✅ Complete |
+| Test Suite | `tests/` | 28 tests passing | ✅ Complete |
 
 ---
 
-## Comparison With Graph-Based RAG Approaches
+## Why A Lattice Beats A Knowledge Graph
 
-| Property | Standard RAG | GraphRAG | HippoRAG | NSL-RAG |
-|---|---|---|---|---|
-| Retrieval structure | None | Knowledge Graph | Knowledge Graph | Concept Lattice |
-| Formal ordering | ❌ | ❌ | ❌ | ✅ |
-| Bounded retrieval proof | ❌ | ❌ | ❌ | ✅ |
-| Fact validation layer | ❌ | ❌ | ❌ | ✅ P/J/A |
-| Contradiction detection | ❌ | ❌ | ❌ | ✅ |
-| Causal chain traversal | ❌ | Partial | ❌ | ✅ |
-| Reasoning trace | ❌ | Partial | ❌ | ✅ 100% |
+| Property | Standard RAG | GraphRAG | NSL-RAG |
+|---|---|---|---|
+| Retrieval structure | None | Knowledge Graph | Concept Lattice |
+| Formal ordering | ❌ | ❌ | ✅ |
+| Bounded retrieval proof | ❌ | ❌ | ✅ Mathematically provable |
+| Fact validation layer | ❌ | ❌ | ✅ P/J/A pipeline |
+| Contradiction detection | ❌ | ❌ | ✅ |
+| Causal chain traversal | ❌ | Partial | ✅ |
+| Reasoning trace | ❌ | Partial | ✅ 100% |
+| Multi-hop reasoning | ❌ | Partial | ✅ |
 
-### Why A Lattice Beats A Knowledge Graph For Reasoning
+**The key distinction:** A knowledge graph stores connections. A lattice stores *ordered* connections — every concept has a provable position relative to every other concept via join and meet operations (Wille, 1982).
 
-A knowledge graph stores connections. A lattice stores **ordered** 
-connections — every concept has a provable position relative to 
-every other concept.
-
-This formal ordering enables **bounded retrieval** — the guarantee 
-that irrelevant nodes are mathematically excluded from results. 
-GraphRAG uses graph proximity heuristics. NSL-RAG uses formal 
-lattice constraints. The difference is the difference between 
-"probably relevant" and "provably relevant."
-
-### Roadmap
-
-- **v0.1.0** *(current)* — Proof of concept vs Standard RAG
-- **v0.2.0** *(planned)* — Formal benchmark vs GraphRAG, HippoRAG, RAPTOR
-- **v0.3.0** *(planned)* — Automatic lattice construction via FCA
-- **v1.0.0** *(planned)* — Production release + arXiv paper
+This formal ordering enables **bounded retrieval** — the guarantee that irrelevant nodes are mathematically excluded from results. GraphRAG uses graph proximity heuristics. NSL-RAG uses formal lattice constraints. The difference is between *probably relevant* and *provably relevant*.
 
 ---
 
 ## Quick Start
+
+**Requirements:** Python 3.11+, Gemini API key (free tier sufficient)
 ```bash
-git clone https://github.com/YOUR_USERNAME/nsl-rag.git
+# Clone
+git clone https://github.com/Navneet-Tiwari/nsl-rag.git
 cd nsl-rag
+
+# Setup
 python -m venv venv
-venv\Scripts\activate  # Windows
+venv\Scripts\activate     # Windows
+source venv/bin/activate  # Mac/Linux
+
 pip install -e ".[dev]"
-```
 
-Create `.env` from template:
-```bash
+# Configure
 copy .env.example .env
-# Add your GEMINI_API_KEY to .env
+# Edit .env — add your GEMINI_API_KEY
 ```
 
-Run the full pipeline:
+**Run the pipeline:**
 ```python
 from nsl_rag import NSLRAGPipeline
 
@@ -150,8 +166,19 @@ response = pipeline.query("Why is the payment service failing?")
 print(response.answer)
 print(response.root_cause)
 print(response.confidence)
+
 for step in response.trace:
     print(f"  → {step}")
+```
+
+**Run the benchmark (no API key needed):**
+```bash
+python scripts/test_benchmark.py
+```
+
+**Run tests:**
+```bash
+pytest tests/ -v
 ```
 
 ---
@@ -159,6 +186,7 @@ for step in response.trace:
 ## Example Output
 ```
 QUERY: Why is the payment service failing?
+════════════════════════════════════════════════════════════
 
 ANSWER:
 The Payment Service is failing due to a dependency cascade
@@ -181,62 +209,125 @@ REASONING TRACE:
   →   ↳ SERVICE | Fraud Detection Service
   →   ↳ DATABASE | Payment Database
   → Dependency chain: payment_service → api_gateway → ecommerce_root
-  → 21 facts validated — clean audit
+  → 21 facts validated by Judge — clean audit
+  → Auditor: no contradictions detected
+════════════════════════════════════════════════════════════
 ```
+
+---
+
+## Benchmark Results
+
+Evaluated on 5 DevOps incident queries — retrieval and reasoning layers:
+
+| Query | NSL-RAG Nodes | NSL-RAG Tokens | NaiveRAG Chunks | NaiveRAG Tokens |
+|---|---|---|---|---|
+| Payment service failing | 5 | 550 | 5 | 360 |
+| Orders stuck pending | 7 | 724 | 5 | 370 |
+| Fraud detection slow | 4 | 442 | 5 | 417 |
+| Payment database errors | 4 | 426 | 5 | 331 |
+| Emails not sending | 5 | 530 | 5 | 338 |
+
+| Metric | NSL-RAG | NaiveRAG |
+|---|---|---|
+| Reasoning trace | **100%** | 0% |
+| Fact validation | **Yes — P/J/A** | No |
+| Contradiction detection | **Yes** | No |
+| Bounded retrieval proof | **Yes** | No |
+| Avg retrieval latency | 18.9ms | 0.8ms |
+
+> **Note on tokens:** NSL-RAG sends more tokens but every token is validated and causally relevant. NaiveRAG sends fewer tokens but includes noisy, unvalidated chunks. Quality vs quantity tradeoff — addressed in v0.2.0 with precision metrics.
+
+> **Note on latency:** NSL-RAG latency includes the full P/J/A pipeline. Raw lattice traversal is sub-millisecond. Gemini intent extraction adds ~2-3 seconds per query (free tier).
 
 ---
 
 ## Project Structure
 ```
-nsl_rag/
-├── lattice/          # Knowledge lattice — node, index, builder, traversal
-├── retrieval/        # Intent extraction (Gemini) + lattice navigation
-├── reasoning/        # Prosecutor → Judge → Auditor pipeline
-├── generation/       # LLM generation + structured output formatter
-├── evaluation/       # NaiveRAG baseline + benchmark metrics
-├── data/             # Synthetic e-commerce dataset (16 nodes)
-├── config/           # settings.yaml + config loader
-└── core/             # Logger, exceptions, shared types
+nsl-rag/
+├── nsl_rag/
+│   ├── pipeline.py          ← Single entry point
+│   ├── lattice/             ← Knowledge lattice
+│   │   ├── node.py          ← LatticeNode (Pydantic)
+│   │   ├── index.py         ← In-memory store
+│   │   ├── builder.py       ← Constructs lattice from data
+│   │   └── traversal.py     ← Core NSL-RAG algorithm
+│   ├── retrieval/           ← Query understanding
+│   │   ├── intent.py        ← Gemini intent extraction
+│   │   └── navigator.py     ← Orchestrates retrieval
+│   ├── reasoning/           ← Validation pipeline
+│   │   ├── prosecutor.py    ← Fact extraction
+│   │   ├── judge.py         ← Symbolic validation
+│   │   └── auditor.py       ← Contradiction detection
+│   ├── generation/          ← LLM integration
+│   │   ├── generator.py     ← Gemini generation
+│   │   └── formatter.py     ← Structured output
+│   ├── evaluation/          ← Benchmarking
+│   │   ├── naive_rag.py     ← Baseline implementation
+│   │   └── metrics.py       ← Comparison framework
+│   ├── data/
+│   │   └── ecommerce.py     ← Synthetic dataset
+│   └── core/
+│       ├── logger.py        ← Structured logging
+│       ├── exceptions.py    ← Custom exceptions
+│       └── types.py         ← Shared types and enums
+├── tests/                   ← 28 tests passing
+├── scripts/                 ← Test and benchmark scripts
+├── paper/                   ← Research paper assets
+├── notebooks/               ← Demo notebooks
+├── pyproject.toml           ← Modern Python packaging
+├── settings.yaml            ← All configuration
+└── LIMITATIONS.md           ← Honest scope statement
 ```
 
 ---
 
-## Running Tests
-```bash
-pytest tests/ -v
-```
+## Roadmap
+
+| Version | Focus | Status |
+|---|---|---|
+| **v0.1.0** | Proof of concept — lattice vs standard RAG | ✅ Released |
+| **v0.2.0** | Formal benchmark vs GraphRAG, HippoRAG, RAPTOR | 🔄 Planned |
+| **v0.3.0** | Automatic lattice construction via FCA | 🔄 Planned |
+| **v0.4.0** | REST API (FastAPI) + multi-domain support | 🔄 Planned |
+| **v1.0.0** | Production release + pip package + arXiv paper | 🔄 Planned |
 
 ---
 
-## Running The Benchmark
-```bash
-python scripts/test_benchmark.py
-```
+## Research
+
+NSL-RAG is grounded in established theory:
+
+- **Formal Concept Analysis** — Wille, R. (1982). *Restructuring lattice theory.* The mathematical basis for lattice construction and bounded retrieval.
+- **Neuro-Symbolic AI** — Garcez, A. et al. (2019). *Neural-Symbolic Computing.* Sequential neuro-symbolic architecture.
+- **RAG** — Lewis, P. et al. (2020). *Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks.* NeurIPS 2020.
+- **GraphRAG** — Edge, D. et al. (2024). *From Local to Global: A Graph RAG Approach.* Microsoft Research.
+
+A research paper formalising the NSL-RAG framework — including the bounded retrieval proof and formal benchmark against graph-based approaches — is in preparation for arXiv submission.
 
 ---
 
-## Research Background
+## Known Limitations
 
-NSL-RAG is grounded in:
-- **Formal Concept Analysis** (Wille, 1982) — mathematical basis for lattice construction
-- **Neuro-Symbolic AI** (Garcez et al., 2019) — combining neural and symbolic reasoning
-- **RAG** (Lewis et al., 2020) — retrieval-augmented generation foundation
+See [LIMITATIONS.md](LIMITATIONS.md) for full details.
 
-A research paper formalising the NSL-RAG framework is in preparation.
+**Summary:**
+- Manual lattice construction (automatic via FCA planned for v0.3.0)
+- Synthetic dataset (real-world validation in v0.2.0)
+- LLM generation benchmark pending (API rate limits on free tier)
+- Single domain (DevOps) in current release
 
 ---
 
-## Status
+## Contributing
 
-- [x] Lattice layer — node, index, builder, traversal
-- [x] Retrieval layer — Gemini intent extraction with caching
-- [x] Reasoning layer — Prosecutor / Judge / Auditor pipeline
-- [x] Generation layer — structured output with reasoning trace
-- [x] Evaluation layer — NaiveRAG baseline + benchmark
-- [ ] Automatic lattice construction via FCA
-- [ ] REST API (FastAPI)
-- [ ] pip package release
-- [ ] arXiv paper submission
+Contributions welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a PR.
+
+Areas where contributions are most valuable:
+- Domain-specific lattice definitions (legal, medical, financial)
+- Automatic lattice construction experiments
+- Benchmark datasets for multi-hop reasoning evaluation
+- Integration with LangChain / LlamaIndex
 
 ---
 
@@ -246,4 +337,25 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
+## Citation
+
+If you use NSL-RAG in your research, please cite:
+```bibtex
+@software{nslrag2026,
+  title  = {NSL-RAG: Neuro-Symbolic Lattice Retrieval-Augmented Generation},
+  author = {Tiwari, Navneet},
+  year   = {2026},
+  url    = {https://github.com/Navneet-Tiwari/nsl-rag},
+  note   = {Research Preview v0.1.0}
+}
+```
+
+---
+
+<div align="center">
+
 *Built as part of ongoing research into formally bounded retrieval systems.*
+
+**[⭐ Star this repo](https://github.com/Navneet-Tiwari/nsl-rag)** if you find it useful
+
+</div>
