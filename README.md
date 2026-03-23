@@ -9,7 +9,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Status: Research Preview](https://img.shields.io/badge/status-research%20preview-orange.svg)]()
 [![Version](https://img.shields.io/badge/version-0.1.0-green.svg)]()
-[![Tests](https://img.shields.io/badge/unit%20tests-28%20passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-28%20unit%20tests-brightgreen.svg)]()
+
 
 [**Overview**](#what-is-nsl-rag) • [**Architecture**](#architecture) • [**Quick Start**](#quick-start) • [**Benchmark**](#benchmark-results) • [**Roadmap**](#roadmap) • [**Paper**](#research)
 
