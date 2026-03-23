@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Status: Research Preview](https://img.shields.io/badge/status-research%20preview-orange.svg)]()
 [![Version](https://img.shields.io/badge/version-0.1.0-green.svg)]()
-[![Tests](https://img.shields.io/badge/tests-28%20passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/unit%20tests-28%20passing-brightgreen.svg)]()
 
 [**Overview**](#what-is-nsl-rag) • [**Architecture**](#architecture) • [**Quick Start**](#quick-start) • [**Benchmark**](#benchmark-results) • [**Roadmap**](#roadmap) • [**Paper**](#research)
 
@@ -176,9 +176,20 @@ for step in response.trace:
 python scripts/test_benchmark.py
 ```
 
-**Run tests:**
+## Running Tests
+
+**Unit tests:**
 ```bash
-pytest tests/ -v
+pytest tests/unit/test_lattice.py -v
+```
+
+**Manual pipeline scripts:**
+```bash
+python scripts/test_ecommerce.py    # lattice + data layer
+python scripts/test_navigator.py    # retrieval layer
+python scripts/test_reasoning.py    # P/J/A pipeline
+python scripts/test_generation.py   # full pipeline (requires Gemini API)
+python scripts/test_benchmark.py    # NSL-RAG vs NaiveRAG comparison
 ```
 
 ---
